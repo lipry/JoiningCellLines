@@ -1,0 +1,4 @@
+-i https://pypi.org/simple
+biopython==1.76
+numpy==1.18.1
+tqdm==4.41.1
