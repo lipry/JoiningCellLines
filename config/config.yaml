@@ -1,6 +1,6 @@
 # inter = intersections between datasets
 # preprocess = preprocessing the raw data
-mode: "inter"
+mode: "preprocess"
 
 # used only in inter mode
 intersection_mode:
@@ -11,4 +11,7 @@ intersection_mode:
   combinations_length: [2, 3, 4]
 
 # used only in preprocessmode
-#preprocess:
+preprocess:
+  import_path: "/app/data"
+  export_path: "/app/data/filtered"
+  cell_lines: ["A549", "GM12878", "HepG2", "K562"]

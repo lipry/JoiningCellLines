@@ -2,19 +2,23 @@ import logging
 import os
 from operator import itemgetter
 
-from src.utils.datasets_export import save_epigenetic, save_labels, save_sequences, building_final_datasets
-from src.utils.datasets_join import multiple_intersect, merge
-from src.utils.maps import Maps
+from src.intersection.datasets_export import save_epigenetic, save_labels, save_sequences, building_final_datasets
+from src.intersection.datasets_import import import_cell_lines_data
+from src.intersection.datasets_join import multiple_intersect, merge
+from src.intersection.maps import Maps
+from src.intersection.utils import get_combinations_index
 
-from src.utils.datasets_import import import_cell_lines_data
-from src.utils.utils import get_combinations_index
 
 def intersection_mode_exec(c):
+    logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(message)s', level=logging.DEBUG)
+    logging.debug("INTERSECTION MODE")
+
     cell_lines = c['cell_lines']
     files_path = c['import_path']
     output_path = c['export_path']
 
     # TODO: fix merge, for now intersect hard-coded
+    # TODO: refactor, removing merge.
     operation = 'i'
     if operation not in ['m', 'i']:
         raise ValueError("Operation not valid")
@@ -26,7 +30,7 @@ def intersection_mode_exec(c):
         logging.debug("{} not found, folder will be created")
         os.makedirs(output_path)
 
-    logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(message)s', level=logging.DEBUG)
+
 
     logging.debug("Importing data from cell lines...")
     X_sequences_list, X_epigenetic_list, y_list = import_cell_lines_data(files_path, cell_lines)
