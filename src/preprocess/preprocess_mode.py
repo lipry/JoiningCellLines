@@ -1,17 +1,8 @@
-import gzip
 import logging
-import numpy as np
+from pandas.testing import assert_frame_equal
+from src.preprocess.dataset_import import get_regions, get_categorical_labels, get_epigenetic_data
+from src.preprocess.utils import append_without_duplicates, fill_missing, get_type
 
-import pandas as pd
-from pandas.util.testing import assert_frame_equal
-
-
-def get_type(c):
-    d = {'chrom': np.object, 'chromStart': np.int, 'chromEnd': np.int, 'strand': np.object}
-    try:
-        return d[c]
-    except KeyError:
-        return np.float
 
 def preprocess_mode_exec(c):
     logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(message)s', level=logging.DEBUG)
@@ -21,55 +12,30 @@ def preprocess_mode_exec(c):
     cell_lines = c['cell_lines']
 
     # Importing regions for enhancers and promoters
-    enhancers_regions = pd.read_csv(root_path + "/enhancers_regions.bed",
-                                    sep="\t",
-                                    names=['chrom', 'chromStart', 'chromEnd', 'full_code', 'unk', 'unk1'])
-    promoters_regions = pd.read_csv(root_path + "/promoters_regions.bed",
-                                    sep="\t",
-                                    names=['chrom', 'chromStart', 'chromEnd', 'full_code', 'unk', 'unk1'])
+    enhancers_regions, promoters_regions = get_regions(root_path)
 
-    # Importing and converting labels of enhancers and promoters
-    enhancers = pd.read_csv(root_path + "/fantom_1000/enhancers.bed", sep="\t")
-    promoters = pd.read_csv(root_path + "/fantom_1000/promoters.bed", sep="\t")
-    enhancers.replace([1, 0], ["A-E", "I-E"], inplace=True)
-    promoters.replace([1, 0], ["A-P", "I-P"], inplace=True)
-    full_sequences = enhancers.append(promoters, ignore_index=True)\
-                        .drop_duplicates(subset =['chrom', 'chromStart', 'chromEnd'],
-                                         keep = False)
-
-    #unire enhancers e promoters
+    # Importing and converting labels of enhancers and promoters and join them in a single dataframe
+    full_sequences = get_categorical_labels("{}/{}".format(root_path, "fantom_1000"))
 
     # Importing epigenetic data
     logging.debug("Importing epigenetic data for: {}".format(", ".join(cell_lines)))
     for l in cell_lines:
         logging.debug("Importing {} data".format(l))
 
-        with gzip.open(root_path + '/fantom_1000/enhancers/{}.csv.gz'.format(l)) as f:
-            df_epi_enanchers = pd.read_csv(f,
-                                           low_memory=False)
-        df_epi_enanchers = df_epi_enanchers[1:]
-
-
-        with gzip.open(root_path + '/fantom_1000/promoters/{}.csv.gz'.format(l)) as f:
-            df_epi_promoters = pd.read_csv(f,
-                                           low_memory=False)
-        df_epi_promoters = df_epi_promoters[1:]
+        df_epi_enanchers, df_epi_promoters = get_epigenetic_data("{}/{}".format(root_path, "fantom_1000"), l)
 
         # building type dictionary
         converting_dictionary = {c: get_type(c) for c in df_epi_promoters.columns}
-        df_epi_promoters = df_epi_promoters.astype(converting_dictionary)
         df_epi_enanchers = df_epi_enanchers.astype(converting_dictionary)
+        df_epi_promoters = df_epi_promoters.astype(converting_dictionary)
 
         assert len(df_epi_promoters.columns) == len(df_epi_enanchers.columns)
         logging.debug("number features for {}: {}".format(l, len(df_epi_promoters.columns)-4))
-        logging.debug("Number of missing values in promoters: {}".format(df_epi_promoters.isna().sum().sum()))
         logging.debug("Number of missing values in enhancers: {}".format(df_epi_enanchers.isna().sum().sum()))
+        logging.debug("Number of missing values in promoters: {}".format(df_epi_promoters.isna().sum().sum()))
 
-        for c in df_epi_promoters.columns[4:]:
-            df_epi_promoters[c].fillna(df_epi_promoters[c].median(), inplace=True)
-
-        for c in df_epi_enanchers.columns[4:]:
-            df_epi_enanchers[c].fillna(df_epi_enanchers[c].median(), inplace=True)
+        df_epi_enanchers = fill_missing(df_epi_enanchers, metric="median")
+        df_epi_promoters = fill_missing(df_epi_promoters, metric="median")
 
         assert len(enhancers_regions) == len(df_epi_enanchers)
         logging.debug("Enhancers - regions: {}, epigenetics: {}".format(len(enhancers_regions),
@@ -79,9 +45,7 @@ def preprocess_mode_exec(c):
         logging.debug("Promoters - regions: {}, epigenetics: {}".format(len(promoters_regions),
                                                                         len(df_epi_promoters)))
 
-        full_epi = df_epi_enanchers.append(df_epi_promoters, ignore_index=True)\
-                        .drop_duplicates(subset =['chrom', 'chromStart', 'chromEnd'],
-                                         keep = False)
+        full_epi = append_without_duplicates(df_epi_enanchers, df_epi_promoters)
 
         # Check if the data are aligned dataframe are equals.
         assert len(full_sequences) == len(full_epi)
