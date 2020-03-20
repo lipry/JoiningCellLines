@@ -1,5 +1,6 @@
 import gzip
 
+import os
 import pandas as pd
 
 from src.preprocess.utils import join_sequences_labels
@@ -55,3 +56,17 @@ def get_epigenetic_data(root_path, cell_line):
     promoters_epi = import_epigenetic_data(root_path, cell_line, t="promoters")
 
     return enhancers_epi, promoters_epi
+
+
+def get_full_path(root_path, window_size, dataset_type):
+    if window_size not in [1000, 200]:
+        raise ValueError("Windows size must be 1000 or 200, {} found".format(window_size))
+
+    if dataset_type not in ["fantom", "roadmap"]:
+        raise ValueError("Windows size must be fantom or roadmap, {} found".format(dataset_type))
+
+    final_path = "{}/{}_{}".format(root_path, dataset_type, window_size)
+    if not os.path.exists(final_path):
+        raise FileNotFoundError("{} data with {} window size not found: {}".format(window_size, dataset_type, final_path))
+
+    return final_path

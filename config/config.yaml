@@ -14,4 +14,8 @@ intersection_mode:
 preprocess:
   import_path: "/app/data"
   export_path: "/app/data/filtered"
-  cell_lines: ["A549", "GM12878", "HepG2", "K562"]
+  cell_lines: ["A549", "GM12878", "HEPG2", "K562"]
+  # allowed values: 200, 1000
+  window_size: 1000
+  # allowed values: fantom or roadmap
+  dataset: "fantom"
