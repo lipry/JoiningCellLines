@@ -2,7 +2,12 @@ import logging
 import os
 
 import numpy as np
+from Bio.Seq import Seq
 from pandas.testing import assert_frame_equal
+from ucsc_genomes_downloader import Genome
+
+from src.intersection.datasets_export import creating_seqIO
+from src.preprocess.dataset_export import save_sequences
 from src.preprocess.dataset_import import get_regions, get_categorical_labels, get_epigenetic_data, get_full_path
 from src.preprocess.utils import append_without_duplicates, fill_missing, get_type
 
@@ -38,6 +43,19 @@ def preprocess_mode_exec(c):
                           columns=['chrom', 'chromStart', 'chromEnd'],
                           header=False,
                           index=False)
+
+    logging.debug("Downloading the hg19 genome")
+    chroms = [k for k, _ in full_sequences.groupby(['chrom'])]
+    hg19 = Genome(assembly="hg19", chromosomes=chroms)
+    logging.debug("Downloading the hg19 genome")
+    sequences = hg19.bed_to_sequence(full_sequences)
+
+    logging.debug(sequences.loc[(sequences['chrom'] == "chr1") & (sequences['chromStart'] == 839287) & (sequences['chromEnd'] == 840287)])
+
+    logging.debug("Saving sequences to file...")
+    seqIO_seq = [creating_seqIO("{}:{}-{}".format(row['chrom'], row['chromStart'], row['chromEnd']), Seq(row['sequence'].upper()))
+                 for _, row in sequences.iterrows()]
+    save_sequences(saving_path, seqIO_seq)
 
 
     # Importing epigenetic data

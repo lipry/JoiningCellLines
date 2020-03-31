@@ -11,6 +11,7 @@ tqdm = "*"
 pyyaml = "*"
 panda = "*"
 pandas = "*"
+ucsc-genomes-downloader = "*"
 
 [requires]
 python_version = "3.7"
