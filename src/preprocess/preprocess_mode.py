@@ -38,6 +38,12 @@ def preprocess_mode_exec(c):
     # Importing and converting labels of enhancers and promoters and join them in a single dataframe
     full_sequences = get_categorical_labels(label_epi_path)
     logging.debug("Saving the sequences bed file in {}".format(saving_path))
+
+    rows = 0
+    if c['sample']:
+        sample_size = int(len(full_sequences) * c['sample_perc'])
+        rows = np.random.randint(len(full_sequences), size=sample_size)
+        full_sequences = full_sequences.iloc[rows]
     full_sequences.to_csv("{}/sequences.bed".format(saving_path),
                           sep="\t",
                           columns=['chrom', 'chromStart', 'chromEnd'],
@@ -49,8 +55,6 @@ def preprocess_mode_exec(c):
     hg19 = Genome(assembly="hg19", chromosomes=chroms)
     logging.debug("Downloading the hg19 genome")
     sequences = hg19.bed_to_sequence(full_sequences)
-
-    logging.debug(sequences.loc[(sequences['chrom'] == "chr1") & (sequences['chromStart'] == 839287) & (sequences['chromEnd'] == 840287)])
 
     logging.debug("Saving sequences to file...")
     seqIO_seq = [creating_seqIO("{}:{}-{}".format(row['chrom'], row['chromStart'], row['chromEnd']), Seq(row['sequence'].upper()))
@@ -88,7 +92,8 @@ def preprocess_mode_exec(c):
                                                                         len(df_epi_promoters)))
 
         full_epi = append_without_duplicates(df_epi_enanchers, df_epi_promoters)
-
+        if c['sample']:
+            full_epi = full_epi.iloc[rows]
         # Check if the data are aligned dataframe are equals before save.
         assert len(full_sequences) == len(full_epi)
         assert_frame_equal(full_sequences[['chrom', 'chromStart', 'chromEnd']],

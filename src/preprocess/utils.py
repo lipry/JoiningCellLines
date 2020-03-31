@@ -1,8 +1,10 @@
 import numpy as np
 
 def append_without_duplicates(first_df, second_df):
-    return first_df.append(second_df, ignore_index=True).drop_duplicates(
+    new_df = first_df.append(second_df, ignore_index=True).drop_duplicates(
         subset=['chrom', 'chromStart', 'chromEnd'], keep=False)
+    new_df.reset_index(drop=True)
+    return new_df
 
 
 def join_sequences_labels(enhancers, promoters):
