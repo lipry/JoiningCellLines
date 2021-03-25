@@ -1,19 +1,19 @@
--i https://pypi.org/simple
+-i https://pypi.org/simple/
 biopython==1.76
-certifi==2019.11.28
-chardet==3.0.4
-dateparser==0.7.4
-idna==2.9
-numpy==1.18.2
+certifi==2020.12.5
+chardet==4.0.0
+dateparser==1.0.0
+idna==2.10
+numpy==1.20.1
 panda==0.3.1
 pandas==1.0.3
 python-dateutil==2.8.1
-pytz==2019.3
-pyyaml==5.3.1
-regex==2020.2.20
-requests==2.23.0
-six==1.14.0
+pytz==2021.1
+pyyaml==5.4
+regex==2021.3.17
+requests==2.25.1
+six==1.15.0
 tqdm==4.43.0
-tzlocal==2.0.0
+tzlocal==2.1
 ucsc-genomes-downloader==1.1.17
-urllib3==1.25.8
+urllib3==1.26.4
